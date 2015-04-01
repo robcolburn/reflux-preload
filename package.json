@@ -1,0 +1,40 @@
+{
+  "name": "reflux-preload",
+  "version": "0.3.0",
+  "description": "A way to manage preloading on the server within a reflux based application.",
+  "main": "reflux-preload.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robcolburn/reflux-preload"
+  },
+  "keywords": [
+    "reflux",
+    "preload",
+    "isomorphic"
+  ],
+  "author": "Rob Colburn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/robcolburn/reflux-preload/issues"
+  },
+  "homepage": "https://github.com/robcolburn/reflux-preload",
+  "dependencies": {
+    "promise-collector": "^0.3.0"
+  },
+  "devDependencies": {
+    "axios": "^0.5.2",
+    "chai": "^2.1.2",
+    "chai-as-promised": "^4.3.0",
+    "es6-promise": "^2.0.1",
+    "es6-promises": "^1.0.10",
+    "jsdom": "^4.0.5",
+    "lodash": "^3.6.0",
+    "mocha": "^2.2.1",
+    "react": "^0.13.1",
+    "react-router": "^0.13.2",
+    "reflux": "^0.2.7"
+  }
+}

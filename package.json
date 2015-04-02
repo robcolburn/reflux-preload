@@ -4,7 +4,7 @@
   "description": "A way to manage preloading on the server within a reflux based application.",
   "main": "reflux-preload.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "mocha test/server-side && mocha test/client-side"
   },
   "repository": {
     "type": "git",

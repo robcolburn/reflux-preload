@@ -4,11 +4,11 @@ describe('Client-side', function() {
   var Router = require('react-router');
   var Preload = require('..');
   var WikiApp = require('./fixtures/WikiApp');
-  beforeEach(function() {
+  before(function() {
     global.document = require('jsdom').jsdom();
     global.window = global.document.defaultView;
   });
-  afterEach(function() {
+  after(function() {
     delete global.document;
     delete global.window;
   });
@@ -31,12 +31,10 @@ describe('Client-side', function() {
 
   it('Renders the basic route', function () {
     return renderPath('/').then(function (element) {
-      // TODO: Get TestUtils working to actually test.
-      // var node = TestUtils.renderIntoDocument(element);
-      // var matches = TestUtils.scryRenderedDOMComponentsWithTag(node, 'ul');
-      // TestUtils.isElement(element).should.be.true;
-//       TestUtils.isElementOfType(element, WikiList).should.be.true;
-//       matches[0].getDOMNode().should.exist;
+      TestUtils.isElement(element).should.be.true;
+      var node = TestUtils.renderIntoDocument(element);
+      var matches = TestUtils.scryRenderedDOMComponentsWithClass(node, 'wiki-list');
+      matches[0].getDOMNode().should.exist;
     });
   });
 });

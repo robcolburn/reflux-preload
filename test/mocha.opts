@@ -1,2 +1,3 @@
 --reporter spec
 --require test/fixtures/fixtures
+--timeout 5000

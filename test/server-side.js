@@ -8,36 +8,34 @@ describe('Server-side', function() {
    * @param {string} url
    *   Url to parse and render.
    * @return {Promise}
-   *   Resolves with object containing
-   *     {string} content - React rendered content to be embeded in HTML
-   *     {string} payload - Preloaded JS to be embeded in script tag.
+   *   Resolves with string containing
+   *     React rendered content to be embeded in HTML
+   *     Preloaded JS to be embeded in script tag.
    */
   function renderPath (url) {
     return new Promise (function (resolve, reject) {
       Router.run(WikiApp.routes, url, function (Handler, state) {
-        Preload.collect(function() {
-          try {
+        try {
+          resolve(Preload.collect(function() {
             render(Handler);
-          } catch (err) {
-            reject(err);
-          }
-        }).then(function(preloadPackage) {
+          }));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }).then(function(preloadPackage) {
+      return new Promise (function (resolve, reject) {
+        Router.run(WikiApp.routes, url, function (Handler, state) {
           try {
-            Router.run(WikiApp.routes, url, function (Handler, state) {
-              try {
-                Preload.deliver(preloadPackage);
-                resolve({
-                  content: render(Handler),
-                  payload: Preload.toPayload(preloadPackage)
-                });
-              } catch (err) {
-                reject(err);
-              }
-            });
+            Preload.deliver(preloadPackage);
+            resolve(
+              render(Handler) +
+              Preload.toPayload(preloadPackage)
+            );
           } catch (err) {
             reject(err);
           }
-        }, reject);
+        });
       });
     });
   }
@@ -46,19 +44,33 @@ describe('Server-side', function() {
     return React.renderToString(React.createElement.apply(React, arguments));
   }
 
-  it('Renders the basic route.', function () {
+  it('Renders the empty query.', function () {
     return renderPath('/').then(function (result) {
-      result.should.have.all.keys(['content', 'payload']);
-      result.content.match('<ul').should.have.length(1);
-      result.payload.match('payload={"WikiList"').should.have.length(1);
+      result.should.be.a('string');
+      result.should.match(/<ul [^>]+><\/ul>/);
+      result.should.match(/<script>refluxPreload=\{"WikiList"\:\{"query"\:\{\}\}\}<\/script>/);
     });
   });
   it('Renders with some query.', function () {
     return renderPath('/Pizza').then(function (result) {
-      result.should.have.all.keys(['content', 'payload']);
-      result.content.match('<ul').should.have.length(1);
-      result.payload.match('payload={"WikiList"').should.have.length(1);
+      result.should.be.a('string');
+      result.should.match(/<span [^>]+>Pizza<\/span>/);
+      result.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
     });
+  });
+  it('Renders concurrent queries.', function () {
+    return Promise.all([
+      renderPath('/Pizza').then(function (result) {
+        result.should.be.a('string');
+        result.should.match(/<span [^>]+>Pizza<\/span>/);
+        result.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
+      }),
+      renderPath('/Cats').then(function (result) {
+        result.should.be.a('string');
+        result.should.match(/<span [^>]+>Cats<\/span>/);
+        result.should.match(/<script>refluxPreload=\{"WikiList".+"Cats".+\}<\/script>/);
+      })
+    ]);
   });
 });
 

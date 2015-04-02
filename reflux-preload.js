@@ -4,6 +4,8 @@ var PromiseCollector = require('promise-collector');
 var isServer = typeof window === 'undefined';
 
 var Preload = new PromiseCollector();
+// Name for stashing to the client.
+Preload.payloadName = 'refluxPreload';
 /**
  * Applies promised data to Store prior to render.
  * Your Component should define the following methods:
@@ -31,6 +33,31 @@ Preload.connect = function(name, action) {
       }
     }
   };
+};
+/**
+ * Convert object to pass on to client.
+ *
+ * @param {object} collection
+ *   Generic Object to store on client
+ * @param {string} payloadName
+ *   Optional. Sets the name of payload to store on client.
+ * @return {string}
+ *   Encoded payload to deliver to client (with inline script).
+ */
+Preload.toPayload = function (collection, payloadName) {
+  return '<script>' + this.payloadName + '=' + JSON.stringify(collection) + '</script>';
+};
+/**
+ * Get payload on client side.
+ *
+ * @param {string} payloadName
+ *   Optional. Sets the name of payload to retreive on client.
+ * @return {object}
+ *   The payload.
+ */
+Preload.getPayload = function (payloadName) {
+  /*global window*/
+  return window[this.payloadName];
 };
 
 module.exports = Preload;

@@ -1,23 +1,34 @@
 # reflux-preload
+
 A way to manage preloading on the server within a [`reflux`](https://www.npmjs.com/package/reflux) based application.
+
+
+An architecture based on [`react-router`](https://npmjs.com/package/react-router) and [`reflux`](https://npmjs.com/package/reflux) has a [chicken or egg dilemma](http://en.wikipedia.org/wiki/Chicken_or_the_egg) problem.  Where you need data to render your page on the server, but you don't know what data to load until you've rendered.
+
+ The problem is, Router yields a basic, static schematic of your app that is largely incomplete because child components are unknown till `render`, and because you're likely rendering "sorry, no content" rather than proper children when your components don't have data.  Your data load itself isn't triggered to load though until Reflux Actions are fired, and those are likely fired until at least `componentWillMount`.
+
+ So, how do we resolve this? How about rendering again?  You just need a promise that all your data is ready this time around.  Enter "Reflux Preload", our idea is capture these data promises during the initial `render`, and then await those promises before `render`ing again.  Along the way, we solve for:
+
+ * Concurrent requests, that is we need to keep sets of promises separated from each other)
+ * Passing data to client, so client-side React can pick-up where server-side left off.
 
 ## Overview of Reflux Preload phases
 
-1. Render blank-slate on the server, we want to:
-  - Start collecting promises, and fire a React Reload.
-  - Initiate loading required resources, collecting promises along the way.
-  - We do not have usable data for Views yet, provided later.
+1. Render blank-slate on the server
+  - During render: initiate loading reources, collect promises and recepient listeners.
+  - We do not have usable data yet, provided later.
 
-2. Render again on the server, we want to:
-  - Deliver the results to corresponding Views.
-  - Skip loading any data, we already have data from Phase 1.
+2. Render with data on the server
+  - Deliver the resources to registered listeners.
+  - Render while skipping the load of additional resources.
+  - Yield up a string for another layer to delier to client.
 
-3. Initial page load on the browser, we want to:
-  - Deliver the results to corresponding Views.
-  - Skip loading data, we already have data from Phase 1.
+3. Initial page load on the browser
+  - Deliver the resources to registered listeners.
+  - Render while skipping the load of additional resources.
 
-4. Regular page on the browser, we want to:
-  - Perform the load, as normal flow of loading component.
+4. Secondary page load on the browser
+  - Perform the load action as normal flow of loading component.
 
 ## Integration
 
@@ -28,7 +39,7 @@ Well assume:
 * You're using [`react-router`](https://www.npmjs.com/package/react-router) in addition to [`reflux`](https://www.npmjs.com/package/reflux).
 * You have a means of converting your data requests to Promises - we're using [`axios`](https://www.npmjs.com/package/axios).
 
-You'll need some async Action, with an associated `listenAndPromise` method.
+In reflux, we tap into async Actions with an associated `listenAndPromise` methods.
 
 ```js
 var GetWikiPages = Reflux.createAction({asyncResult: true});
@@ -72,41 +83,41 @@ var WikiList = React.createClass({
 
 ```
 
-2. Server-side Renderer
-
-Render the initial virtual dom, collecting promises along the way.  After promise is done, deliver to re-establish context, and re-render.
+3. Server-side Renderer
 
 
+Render the markup, while collecting promises.  The module handles the double calls to render for you, you'll just need to wrap your normal .
+
+
+Callback Style
 ```js
-Router.run(routes, url, function (Handler, state) {
-  Preload.collect(function() {
-    render(Handler);
-  }).then(function(preloadPackage) {
-    Router.run(routes, url, function (Handler, state) {
-      Preload.deliver(preloadPackage);
-      app.render('index.ejs', {
-        content: render(Handler),
-        payload: Preload.toPayload(preloadPackage)
-      }, …);
-    });
+function render (routes, url, callback) {
+  Router.run(routes, url, function (Handler) {
+    resolve(Preload.render(render, Handler))
+      .then(callback.bind(this, null), callack);
   });
-});
-function render () {
+  
+}
+function myRenderMethod () {
   return React.renderToString(React.createElement.apply(React, arguments));
 }
 ```
 
-index.ejs
-```ejs
-<!DOCTYPE html>
-<html>
-  <body>
-      <div id="app"><%- content %></div>
-      <script><%- payload %></script>
-      <script src="app.js"></script>
-  </body>
-</html>
-
+Promise-Style
+```js
+function render (routes, url) {
+  return Promise(function (resolve, reject) {
+    Router.run(routes, url, function (Handler) {
+      resolve(Preload.render(render, Handler))
+        .then(function (html) {
+          // tada
+        });
+    });
+  });
+});
+function myRenderMethod () {
+  return React.renderToString(React.createElement.apply(React, arguments));
+}
 ```
 
 3. Client-side Renderer
@@ -114,7 +125,7 @@ index.ejs
 Be sure to deliver the payload before running React.
 
 ```js
-Preload.deliver(Preload.getPayload());
+Preload.deliver();
 Router.run(routes, Router.HistoryLocation, function(Handler, state) {
   React.render(
     React.createElement(Handler, null),

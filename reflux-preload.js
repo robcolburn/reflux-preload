@@ -7,8 +7,9 @@ var Preload = new PromiseCollector();
 // Name for stashing to the client.
 Preload.payloadName = 'refluxPreload';
 /**
- * Applies promised data to Store prior to render.
- * Your Component should define the following methods:
+ * Pipes a component's load action to Preload.
+ *
+ * Component should define the following methods:
  *   <Promise> preload
  *     When called, returns a promise representing
  *   <boolean> isLoaded
@@ -16,9 +17,9 @@ Preload.payloadName = 'refluxPreload';
  *     and skip calling preload when changing to this View.
  *
  * @param {string} name
- *   Identifier for this Preload action.
+ *   Identifier for this loading action.
  * @param {Reflux.Action} action
- *   The action to be preloaded.
+ *   The action to trigger with loaded data.
  * @return {Mixin}
  *   Mixin for a React Component.
  */
@@ -33,6 +34,27 @@ Preload.connect = function(name, action) {
       }
     }
   };
+};
+/**
+ * Wrap a render function in preload detection and delivery.
+ *
+ * @param {function} render
+ *   A callback to render markup.
+ * @param {...}
+ *   Params to be passed to render callback
+ * @return {Promise<string>}
+ *   Yields a the string of html from rendering function
+ *   with paylaod attached.
+ */
+Preload.render = function (render) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return Preload.collect(function() {
+    render.apply(this, args);
+  }).then(function(preloadPackage){
+    Preload.deliver(preloadPackage);
+    return render.apply(this, args) +
+      Preload.toPayload(preloadPackage);
+  });
 };
 /**
  * Convert object to pass on to client.

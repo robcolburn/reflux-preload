@@ -3,7 +3,7 @@ var Reflux = require('reflux');
 var Router = require('react-router');
 var axios = require('axios');
 var _ = require('lodash');
-var Preload = require('../..');
+var Preload = require('..');
 
 // General Reflux Action template - Wikipedia use-case
 var GetWiki = {};
@@ -84,3 +84,45 @@ function Route (params, children) {
   return React.createElement(Router.Route, params, children);
 }
 exports.routes = routes;
+
+/**
+ * Example Server Render method
+ * @param {...}
+ *   Passes all args to React.createElement
+ * @return {string}
+ *   Markup returned from React. 
+ */
+var prerender = Preload.render.bind(Preload, function render () {
+  return React.renderToString(React.createElement.apply(React, arguments));
+});
+
+/**
+ * Example Render URL method.
+ *
+ * @param {ReactRoute} routes
+ *   Component Tree of ReactRouter Route's.
+ * @param {string} url
+ *   Url to parse and render.
+ * @return {Promise<string>}
+ *   Yields string containing
+ *     React rendered html including preload script tag.
+ */
+function serverRoute (url) {
+  return new Promise(Router.run.bind(Router, routes, url))
+    .then(prerender);
+}
+exports.serverRoute = serverRoute;
+
+/**
+ * Example Client-side rendering
+ * @param {string} url
+ *   Url to parse and render.
+ * @return {Promise<ReactElement>}
+ *   Yields ReactElement of rendered virutal DOM.
+ */
+function clientRoute (url) {
+  Preload.deliver(Preload.getPayload());
+  return new Promise(Router.run.bind(Router, routes, url))
+    .then(React.createElement);
+}
+exports.clientRoute = clientRoute;

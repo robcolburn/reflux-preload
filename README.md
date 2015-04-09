@@ -93,31 +93,23 @@ Callback Style
 ```js
 function render (routes, url, callback) {
   Router.run(routes, url, function (Handler) {
-    resolve(Preload.render(render, Handler))
-      .then(callback.bind(this, null), callack);
+    Preload.render(function myRenderMethod () {
+      return React.renderToString(React.createElement(Handler));
+    })
+    .then(callback.bind(this, null), callack);
   });
-  
-}
-function myRenderMethod () {
-  return React.renderToString(React.createElement.apply(React, arguments));
 }
 ```
 
 Promise-Style
 ```js
-function render (routes, url) {
-  return Promise(function (resolve, reject) {
-    Router.run(routes, url, function (Handler) {
-      resolve(Preload.render(render, Handler))
-        .then(function (html) {
-          // tada
-        });
-    });
-  });
-});
-function myRenderMethod () {
+var prerender = Preload.render.bind(Preload, function myRenderMethod () {
   return React.renderToString(React.createElement.apply(React, arguments));
-}
+});
+function render (routes, url) {
+  return Promise(Router.run.bind(Router, routes, url))
+    .then(prerender);
+});
 ```
 
 3. Client-side Renderer
@@ -126,9 +118,9 @@ Be sure to deliver the payload before running React.
 
 ```js
 Preload.deliver();
-Router.run(routes, Router.HistoryLocation, function(Handler, state) {
+Router.run(routes, Router.HistoryLocation, function(Handler) {
   React.render(
-    React.createElement(Handler, null),
+    React.createElement(Handler),
     document.getElementById('app')
   );
 });

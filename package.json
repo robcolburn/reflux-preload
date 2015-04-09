@@ -4,6 +4,7 @@
   "description": "A way to manage preloading on the server within a reflux based application.",
   "main": "reflux-preload.js",
   "scripts": {
+    "lint": "jshint **.js */**.js",
     "test": "mocha test/server-side && mocha test/client-side"
   },
   "repository": {
@@ -30,11 +31,19 @@
     "chai-as-promised": "^4.3.0",
     "es6-promise": "^2.0.1",
     "es6-promises": "^1.0.10",
+    "ghooks": "^0.3.2",
     "jsdom": "^4.0.5",
+    "jshint": "^2.6.3",
     "lodash": "^3.6.0",
     "mocha": "^2.2.1",
     "react": "^0.13.1",
     "react-router": "^0.13.2",
     "reflux": "^0.2.7"
+  },
+  "config": {
+    "ghooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm test"
+    }
   }
 }

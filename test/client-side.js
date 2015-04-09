@@ -15,10 +15,10 @@ describe('Client-side', function() {
 
   it('Renders the basic route', function () {
     return clientRoute('/').then(function (element) {
-      TestUtils.isElement(element).should.be.true;
+      TestUtils.isElement(element).should.eql(true);
       var node = TestUtils.renderIntoDocument(element);
       var matches = TestUtils.scryRenderedDOMComponentsWithClass(node, 'wiki-list');
-      matches[0].getDOMNode().should.exist;
+      matches[0].getDOMNode().should.be.a('object');
     });
   });
 });

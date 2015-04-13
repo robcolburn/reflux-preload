@@ -1,27 +1,70 @@
-describe('Client-side', function() {
-  var React = require('react/addons');
-  var TestUtils = React.addons.TestUtils;
-  var Router = require('react-router');
-  var clientRoute = require('../example-app/WikiApp').clientRoute;
-  var serverRoute = require('../example-app/WikiApp').serverRoute;
+/*global require:true, describe:true, before:true, it:true, window:true, setTimeout:true*/
+describe('Client-side', function () {
+  'use strict';
+  var app = require('../example-app/server');
+  var phantom = require('phantom');
+  var browser;
+  var server;
 
-  before(function() {
-    global.document = require('jsdom').jsdom();
-    global.window = global.document.defaultView;
-  });
-  after(function() {
-    delete global.document;
-    delete global.window;
+  // Get browser and server up and running
+  before(function (done) {
+    server = app.listen(process.env.PORT || 3000);
+    phantom.create(function (ph) {
+      browser = ph;
+      done();
+    });
+  }, 2000);
+
+  after(function () {
+    server.close();
+    browser.exit();
   });
 
-  it('Renders the basic route', function () {
-    return serverRoute('/').then(function() {
-      return clientRoute('/').then(function (element) {
-        TestUtils.isElement(element).should.eql(true);
-        var node = TestUtils.renderIntoDocument(element);
-        var matches = TestUtils.scryRenderedDOMComponentsWithClass(node, 'wiki-list');
-        matches[0].getDOMNode().should.be.a('object');
+  function clientRoute(path, browserFn) {
+    return new Promise(function (resolve, reject) {
+      browser.createPage(function (page) {
+        page.open('http://localhost:3000' + path,
+          page.evaluate.bind(page, browserFn || getHTML, resolve)
+        );
       });
     });
+  }
+
+  function getHTML () {
+    return document.body.innerHTML;
+  }
+
+  it('Renders the empty query', function () {
+    return clientRoute('/').then(function (html) {
+      html.should.be.a('string');
+      html.should.match(/<ul [^>]+><\/ul>/);
+      html.should.match(/<script>refluxPreload=\{"WikiList"\:\{"query"\:\{\}\}\}<\/script>/);
+    });
+  });
+  it('Renders with some query.', function () {
+    return clientRoute('/Pizza').then(function (html) {
+      html.should.be.a('string');
+      html.should.match(/<span [^>]+>Pizza<\/span>/);
+      html.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
+    });
+  });
+  it('Renders concurrent queries.', function () {
+    return Promise.all([
+      clientRoute('/Pizza').then(function (html) {
+        html.should.be.a('string');
+        html.should.match(/<span [^>]+>Pizza<\/span>/);
+        html.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
+      }),
+      clientRoute('/Cats').then(function (html) {
+        html.should.be.a('string');
+        html.should.match(/<span [^>]+>Cats<\/span>/);
+        html.should.match(/<script>refluxPreload=\{"WikiList".+"Cats".+\}<\/script>/);
+      }),
+      clientRoute('/Dogs').then(function (html) {
+        html.should.be.a('string');
+        html.should.match(/<span [^>]+>Dogs<\/span>/);
+        html.should.match(/<script>refluxPreload=\{"WikiList".+"Dogs".+\}<\/script>/);
+      })
+    ]);
   });
 });

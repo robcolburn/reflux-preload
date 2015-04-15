@@ -1,15 +1,13 @@
 /*global require:true, describe:true, before:true, it:true, window:true, setTimeout:true*/
 describe('Client-side', function () {
   'use strict';
-  var app = require('../example-app/server');
-  var phantom = require('phantom');
   var browser;
   var server;
 
   // Get browser and server up and running
   before(function (done) {
-    server = app.listen(process.env.PORT || 3000);
-    phantom.create(function (ph) {
+    server = require('../example-app/server');
+    require('phantom').create(function (ph) {
       browser = ph;
       done();
     });

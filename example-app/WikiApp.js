@@ -115,14 +115,12 @@ exports.serverRoute = serverRoute;
 
 /**
  * Example Client-side rendering
- * @param {string} url
- *   Url to parse and render.
  * @return {Promise<ReactElement>}
  *   Yields ReactElement of rendered virutal DOM.
  */
-function clientRoute (url) {
+function clientRoute () {
   Preload.deliver(Preload.getPayload());
-  return new Promise(Router.run.bind(Router, routes, url))
+  return new Promise(Router.run.bind(Router, routes, Router.HistoryLocation))
     .then(React.createElement);
 }
 exports.clientRoute = clientRoute;

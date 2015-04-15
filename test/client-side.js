@@ -65,4 +65,10 @@ describe('Client-side', function () {
       })
     ]);
   });
+  it('Runs React lifecycle.', function () {
+    return clientRoute('/Pizza').then(function (html) {
+      html.should.be.a('string');
+      html.should.match(/<a[^>]+style="color:\s?green[^>]+>/);
+    });
+  });
 });

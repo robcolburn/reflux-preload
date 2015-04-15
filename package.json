@@ -1,6 +1,6 @@
 {
   "name": "reflux-preload",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A way to manage preloading on the server within a reflux based application.",
   "main": "reflux-preload.js",
   "scripts": {

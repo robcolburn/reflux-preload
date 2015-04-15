@@ -55,10 +55,10 @@ function reactRoute (req, res, next) {
 
 // Print Error Messages
 app.use(function (err, req, res, next) {
-  console.log(err);
+  console.error(err.stack);
   res.status((err && err.status) || 500).send({
     message: err.message,
-    err: err
+    stack: err.stack
   });
 });
 

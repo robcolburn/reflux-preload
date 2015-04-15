@@ -62,16 +62,21 @@ var WikiList = React.createClass({
   isLoaded: function() {
     return _.isEqual(this.state.wiki.query, this.context.router.getCurrentParams());
   },
+  componentDidMount: function() {
+    // Apply a state, so we can verify this occurs in testing.
+    this.setState({mounted: true});
+  },
   render: function () {
     var D = React.DOM;
     var pages = this.state.wiki && this.state.wiki.pages;
     return D.ul({className: 'wiki-list'},
       pages && _.map(pages, function (page, id) {
          return D.li({key: id}, D.a(
-           {href: 'http://en.wikipedia.org/wiki/' + page.title},
+           {href: 'http://en.wikipedia.org/wiki/' + page.title,
+           style: this.state.mounted && {color:'green'}},
            [page.pageid, ':', page.title]
          ));
-      })
+      }, this)
     );
   }
 });
@@ -93,7 +98,9 @@ exports.routes = routes;
  *   Markup returned from React. 
  */
 var prerender = Preload.render.bind(Preload, function render () {
-  return React.renderToString(React.createElement.apply(React, arguments));
+  return '<div id="app">' +
+    React.renderToString(React.createElement.apply(React, arguments)) +
+    '</div>';
 });
 
 /**
@@ -120,7 +127,13 @@ exports.serverRoute = serverRoute;
  */
 function clientRoute () {
   Preload.deliver(Preload.getPayload());
-  return new Promise(Router.run.bind(Router, routes, Router.HistoryLocation))
-    .then(React.createElement);
+  return new Promise(function (resolve) {
+    Router.run(routes, Router.HistoryLocation, function(Handler) {
+      React.render(
+        React.createElement(Handler, null),
+        document.getElementById('app')
+      );
+    });
+  });
 }
 exports.clientRoute = clientRoute;

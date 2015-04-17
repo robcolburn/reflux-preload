@@ -1,28 +1,15 @@
 var React = require('react');
 var Reflux = require('reflux');
 var Router = require('react-router');
-var axios = require('axios');
-var _ = require('lodash');
+var isEqual = require('lodash/lang/isEqual');
+var map = require('lodash/collection/map');
 var Preload = require('..');
+var WikipediaAPI = require('./WikipediaAPI');
 
 // General Reflux Action template - Wikipedia use-case
 var GetWiki = {};
 GetWiki.load = Reflux.createAction({asyncResult: true});
-GetWiki.load.listenAndPromise(function(query) {
-  return axios.get("http://en.wikipedia.org/w/api.php", {
-    params: _.extend({
-      "action": "query",
-      "format": "json",
-      "continue": ""
-    }, query)
-  }).then(function (payload) {
-    // {"batchcomplete":"","query":{"pages":{"24768":{"pageid":24768,"ns":0,"title":"Pizza"}}}}
-    return {
-      query: query,
-      pages: payload.data.query && payload.data.query.pages
-    };
-  });
-});
+GetWiki.load.listenAndPromise(WikipediaAPI.query);
 exports.GetWiki = GetWiki;
 
 var WikiStore = Reflux.createStore({
@@ -60,7 +47,7 @@ var WikiList = React.createClass({
     return GetWiki.load(this.context.router.getCurrentParams());
   },
   isLoaded: function() {
-    return _.isEqual(this.state.wiki.query, this.context.router.getCurrentParams());
+    return isEqual(this.state.wiki.query, this.context.router.getCurrentParams());
   },
   componentDidMount: function() {
     // Apply a state, so we can verify this occurs in testing.
@@ -70,7 +57,7 @@ var WikiList = React.createClass({
     var D = React.DOM;
     var pages = this.state.wiki && this.state.wiki.pages;
     return D.ul({className: 'wiki-list'},
-      pages && _.map(pages, function (page, id) {
+      pages && map(pages, function (page, id) {
          return D.li({key: id}, D.a(
            {href: 'http://en.wikipedia.org/wiki/' + page.title,
            style: this.state.mounted && {color:'green'}},

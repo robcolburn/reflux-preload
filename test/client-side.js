@@ -2,16 +2,19 @@
 describe('Client-side', function () {
   'use strict';
   var browser;
-  var server;
+  var server = require('../example-app/server');
   var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
-
-  // Get browser and server up and running
-  before(function (done) {
-    server = require('../example-app/server');
+  var promiseBrowser = new Promise(function (resolve) {
     require('phantom').create(function (ph) {
       browser = ph;
-      done();
+      resolve();
     });
+  });
+
+
+  // Get browser and server up and running
+  before(function () {
+    return promiseBrowser;
   }, 2000);
 
   after(function () {

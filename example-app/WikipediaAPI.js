@@ -1,5 +1,6 @@
 var axios = require('axios');
 var extend = require('lodash/object/extend');
+var omit = require('lodash/object/omit');
 var WikipediaAPI = {};
 
 /**
@@ -25,9 +26,11 @@ WikipediaAPI.query = function (action_parameters) {
   }).then(function (payload) {
     // Payload looks like
     // {"batchcomplete":"","query":{"pages":{"24768":{"pageid":24768,"ns":0,"title":"Pizza"}}}}
+    var pages = (payload.data.query && payload.data.query.pages) || {};
+    pages = omit(pages, '-1');
     return {
       query: action_parameters,
-      pages: payload.data.query && payload.data.query.pages
+      pages: pages
     };
   });
 };

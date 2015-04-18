@@ -3,6 +3,7 @@ describe('Client-side', function () {
   'use strict';
   var browser;
   var server;
+  var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
 
   // Get browser and server up and running
   before(function (done) {
@@ -19,6 +20,7 @@ describe('Client-side', function () {
   });
 
   function clientRoute(path, browserFn) {
+    MockWikipediaAPI.mock();
     return new Promise(function (resolve, reject) {
       browser.createPage(function (page) {
         page.open('http://localhost:3000' + path,
@@ -36,7 +38,7 @@ describe('Client-side', function () {
     return clientRoute('/').then(function (html) {
       html.should.be.a('string');
       html.should.match(/<ul [^>]+><\/ul>/);
-      html.should.match(/<script>refluxPreload=\{"WikiList"\:\{"query"\:\{\}\}\}<\/script>/);
+      html.should.match(/<script>refluxPreload=\{"WikiList":\{"query":\{\},"pages":\{\}\}\}<\/script>/);
     });
   });
   it('Renders with some query.', function () {

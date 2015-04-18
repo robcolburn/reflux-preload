@@ -3,15 +3,18 @@ describe('Server-side', function() {
   var React = require('react');
   var Router = require('react-router');
   var serverRoute = require('../example-app/WikiApp').serverRoute;
+  var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
 
   it('Renders the empty query.', function () {
+    MockWikipediaAPI.mock();
     return serverRoute('/').then(function (html) {
       html.should.be.a('string');
       html.should.match(/<ul [^>]+><\/ul>/);
-      html.should.match(/<script>refluxPreload=\{"WikiList"\:\{"query"\:\{\}\}\}<\/script>/);
+      html.should.match(/<script>refluxPreload=\{"WikiList":\{"query":\{\},"pages":\{\}\}\}<\/script>/);
     });
   });
   it('Renders with some query.', function () {
+    MockWikipediaAPI.mock();
     return serverRoute('/Pizza').then(function (html) {
       html.should.be.a('string');
       html.should.match(/<span [^>]+>Pizza<\/span>/);
@@ -19,6 +22,7 @@ describe('Server-side', function() {
     });
   });
   it('Renders concurrent queries.', function () {
+    MockWikipediaAPI.mock(3);
     return Promise.all([
       serverRoute('/Pizza').then(function (html) {
         html.should.be.a('string');

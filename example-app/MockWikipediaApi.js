@@ -7,8 +7,18 @@ MockWikipediaAPI.on = function() {
 MockWikipediaAPI.off = function() {
   nock.disableNetConnect();
 };
-MockWikipediaAPI.mock = function (count) {
+/**
+ *
+ * @param {int} count
+ *   Number of requests to intercept (default 1).
+ * @param {number} status
+ *   HTTP Status Code to respond with (default 200)
+ * @return {nock.scope}
+ *  A `nock` scope object.
+ */
+MockWikipediaAPI.mock = function (count, status) {
   count = count || 1;
+  status = status || 200;
   var scope = this;
   if (!scope || !scope.isDone) {
     scope = nock('http://en.wikipedia.org');
@@ -18,7 +28,7 @@ MockWikipediaAPI.mock = function (count) {
       .filteringPath(/\?.*/g, '')
       .get('/w/api.php')
       .delayConnection(30)
-      .reply(200, success);
+      .reply(status, success);
   }
   return scope;
 };

@@ -23,7 +23,7 @@ var WikiStore = Reflux.createStore({
     }
   },
   onLoadFailed: function(err){
-    console.error(err);
+    // console.error(err);
     this.trigger(this.data = {});
   },
   getInitialState: function() {
@@ -35,7 +35,7 @@ exports.WikiStore = WikiStore;
 var WikiList = React.createClass({
   mixins: [
     Reflux.connect(WikiStore, 'wiki'),
-    Preload.connect('WikiList', GetWiki.load.completed),
+    Preload.connect('WikiList', GetWiki.load),
   ],
   contextTypes: {
     router: React.PropTypes.func

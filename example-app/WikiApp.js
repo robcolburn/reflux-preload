@@ -10,7 +10,6 @@ var WikipediaAPI = require('./WikipediaAPI');
 var GetWiki = {};
 GetWiki.load = Reflux.createAction({asyncResult: true});
 GetWiki.load.listenAndPromise(WikipediaAPI.query);
-exports.GetWiki = GetWiki;
 
 var WikiStore = Reflux.createStore({
   listenables: [GetWiki],
@@ -39,9 +38,6 @@ var WikiList = React.createClass({
   ],
   contextTypes: {
     router: React.PropTypes.func
-  },
-  getParams: function() {
-    return this.context.router.getCurrentParams();
   },
   preload: function(){
     return GetWiki.load(this.context.router.getCurrentParams());
@@ -115,7 +111,7 @@ exports.serverRoute = serverRoute;
 function clientRoute () {
   Preload.deliver(Preload.getPayload());
   return new Promise(function (resolve) {
-    Router.run(routes, Router.HistoryLocation, function(Handler) {
+    Router.run(routes, Router.HistoryLocation, function (Handler) {
       React.render(
         React.createElement(Handler, null),
         document.getElementById('app')

@@ -33,95 +33,96 @@ An architecture based on [`react-router`](https://npmjs.com/package/react-router
 ## Integration
 
 
+0. Assumptions
+
+ * You're using [`react-router`](https://www.npmjs.com/package/react-router) in addition to [`reflux`](https://www.npmjs.com/package/reflux).
+ * You have a means of converting your data requests to Promises - we're using [`axios`](https://www.npmjs.com/package/axios).
+ * You're accustomed to Reflux's async Actions using the `listenAndPromise` method.
+
+ ```js
+ var GetWiki = {};
+ GetWiki.load = Reflux.createAction({asyncResult: true});
+ GetWiki.load.listenAndPromise(function(titles) {
+   return axios.get("http://en.wikipedia.org/w/api.php", {
+     "titles": titles,
+     "action": "query",
+     "format": "json",
+     "continue": ""
+   });
+ });
+ ```
+
 1. Components
 
-Well assume:
-* You're using [`react-router`](https://www.npmjs.com/package/react-router) in addition to [`reflux`](https://www.npmjs.com/package/reflux).
-* You have a means of converting your data requests to Promises - we're using [`axios`](https://www.npmjs.com/package/axios).
+  In your component, you'll add a `Preload.connect` which binds an async Actions to a key in the Preload object.  This key should be unique to your needs, typically we just use the Action name.
 
-In reflux, we tap into async Actions with an associated `listenAndPromise` methods.
-
-```js
-var GetWikiPages = Reflux.createAction({asyncResult: true});
-GetWikiPages.listenAndPromise(function(titles) {
-  return axios.get("http://en.wikipedia.org/w/api.php", {
-    "titles": titles,
-    "action": "query",
-    "format": "json",
-    "continue": ""
+  ```jsx
+  var WikiList = React.createClass({
+    mixins: [
+      Router.State,
+      Reflux.connect(WikiStore, 'wiki'),
+      Preload.connect('GetWiki', GetWiki.load),
+    ],
+    contextTypes: {
+      router: React.PropTypes.func
+    },
+    preload: function () {
+      return GetPages.load(this.context.router.getCurrentParams());
+    },
+    isLoaded: function () {
+      return this.state.wiki.query === this.getParams().query;
+    },
+    render: function () {
+      return <ul>
+        {_.mapValues(this.state.wiki.pages, page =>
+           <li><a href={'http://en.wikipedia.org/wiki/' + page.title}>
+             {page.pageid} : {page.title}
+           </a></li>
+        )}
+      </ul>
+    }
   });
-});
-```
+  ```
 
-Now in your component, you'll add a `Preload.connect` which binds the completed action to a key (this key should be unique to your needs, probably the Component's name).
+2. Server-side Renderer
 
-```js
-var WikiList = React.createClass({
-  mixins: [
-    Router.State,
-    Reflux.connect(WikiStore, 'wiki'),
-    Preload.connect('Pizza', GetWiki.completed),
-  ],
-  preload: function(){
-    return GetPages(this.getParams().query);
-  },
-  isLoaded: function() {
-    return this.state.wiki.query === this.getParams().query;
-  },
-  render: function () {
-    var D = React.DOM;
-    return D.ul({},
-      _.mapValues(this.props.pages, function (page) {
-         return D.li(null, D.a(
-           {href: 'http://en.wikipedia.org/wiki/' + page.title},
-           [page.pageid, ':', page.title]
-         ));
+  Render the markup, while collecting promises.  The module handles the double calls to render for you, you'll just need to wrap your normal.
+
+  * Callback Style
+  ```js
+  function render (routes, url, callback) {
+    Router.run(routes, url, function (Handler) {
+      Preload.render(function myRenderMethod () {
+        return React.renderToString(React.createElement(Handler));
       })
-    );
+      .then(callback.bind(this, null), callack);
+    });
   }
-});
+  ```
 
-```
-
-3. Server-side Renderer
-
-
-Render the markup, while collecting promises.  The module handles the double calls to render for you, you'll just need to wrap your normal .
-
-
-Callback Style
-```js
-function render (routes, url, callback) {
-  Router.run(routes, url, function (Handler) {
-    Preload.render(function myRenderMethod () {
-      return React.renderToString(React.createElement(Handler));
-    })
-    .then(callback.bind(this, null), callack);
+  * Promise-Style
+  ```js
+  var prerender = Preload.render.bind(Preload, function render () {
+    return '<div id="app">' +
+      React.renderToString(React.createElement.apply(React, arguments)) +
+      '</div>';
   });
-}
-```
-
-Promise-Style
-```js
-var prerender = Preload.render.bind(Preload, function myRenderMethod () {
-  return React.renderToString(React.createElement.apply(React, arguments));
-});
-function render (routes, url) {
-  return Promise(Router.run.bind(Router, routes, url))
-    .then(prerender);
-});
-```
+  function render (routes, url) {
+    return Promise(Router.run.bind(Router, routes, url))
+      .then(prerender);
+  });
+  ```
 
 3. Client-side Renderer
 
-Be sure to deliver the payload before running React.
+  Be sure to deliver the payload before running React.
 
-```js
-Preload.deliver();
-Router.run(routes, Router.HistoryLocation, function(Handler) {
-  React.render(
-    React.createElement(Handler),
-    document.getElementById('app')
-  );
-});
-```
+  ```js
+  Preload.deliver();
+  Router.run(routes, Router.HistoryLocation, function (Handler) {
+    React.render(
+      React.createElement(Handler),
+      document.getElementById('app')
+    );
+  });
+  ```

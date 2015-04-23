@@ -41,5 +41,17 @@ describe('Server-side', function() {
       })
     ]);
   });
+  it('Renders faiilure.', function () {
+    MockWikipediaAPI.mock(1, 404);
+    return serverRoute('/Pizza').then(function () {
+      throw new Error("Bad requet, should not resolve");
+    }, function (result) {
+      result.should.have.deep.property('errors.WikiList.status', 404);
+      var html = result.html;
+      html.should.be.a('string');
+      html.should.match(/<ul [^>]+><\/ul>/);
+      html.should.match(/<script>refluxPreload=\{.+"rejected":\{"WikiList".+"Pizza".+\}<\/script>/);
+    });
+  });
 });
 

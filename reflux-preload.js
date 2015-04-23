@@ -1,4 +1,3 @@
-
 var PromiseCollector = require('promise-collector');
 // Easy flag to distinquish state.
 var isServer = typeof window === 'undefined';
@@ -19,12 +18,19 @@ Preload.payloadName = 'refluxPreload';
  * @param {string} name
  *   Identifier for this loading action.
  * @param {Reflux.Action} action
- *   The action to trigger with loaded data.
+ *   The async Action to trigger with loaded or rejected data.
  * @return {Mixin}
  *   Mixin for a React Component.
  */
 Preload.connect = function(name, action) {
-  Preload.receive(name, action.trigger.bind(action));
+  if (action.completed) {
+    Preload.receive(name,
+      action.completed.trigger.bind(action.completed),
+      action.failed.trigger.bind(action.failed));
+  }
+  else {
+    Preload.receive(name, action.trigger.bind(action));
+  }
   return {
     componentWillMount: function () {
       Preload.promise(name, this.preload);
@@ -42,18 +48,27 @@ Preload.connect = function(name, action) {
  *   A callback to render markup.
  * @param {...}
  *   Params to be passed to render callback
- * @return {Promise<string>}
- *   Yields a the string of html from rendering function
- *   with paylaod attached.
+ * @return {Promise}
+ *   Yields string of html from rendering function w/ paylaod attached.
+ *   Rejects with object:
+ *   -{object} errors: Errors from rejection
+ *   -{string} html: String of html from rendering function w/ paylaod attached.
  */
 Preload.render = function (render) {
   var args = Array.prototype.slice.call(arguments, 1);
-  return Preload.collect(function() {
-    render.apply(this, args);
-  }).then(function(preloadPackage){
+  function postRender (preloadPackage) {
     Preload.deliver(preloadPackage);
     return render.apply(this, args) +
       Preload.toPayload(preloadPackage);
+  }
+  return Preload.collect(function() {
+    render.apply(this, args);
+  })
+  .then(postRender, function (preloadPackage) {
+    throw {
+      html: postRender(preloadPackage),
+      errors: preloadPackage.rejected
+    };
   });
 };
 /**

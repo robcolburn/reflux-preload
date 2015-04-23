@@ -10,7 +10,7 @@ describe('Server-side', function() {
     return serverRoute('/').then(function (html) {
       html.should.be.a('string');
       html.should.match(/<ul [^>]+><\/ul>/);
-      html.should.match(/<script>refluxPreload=\{"WikiList":\{"query":\{\},"pages":\{\}\}\}<\/script>/);
+      html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList":\{"query":\{\},"pages":\{\}\}\},"rejected":\{\}\}<\/script>/);
     });
   });
   it('Renders with some query.', function () {
@@ -18,7 +18,7 @@ describe('Server-side', function() {
     return serverRoute('/Pizza').then(function (html) {
       html.should.be.a('string');
       html.should.match(/<span [^>]+>Pizza<\/span>/);
-      html.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
+      html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Pizza".+\}<\/script>/);
     });
   });
   it('Renders concurrent queries.', function () {
@@ -27,17 +27,17 @@ describe('Server-side', function() {
       serverRoute('/Pizza').then(function (html) {
         html.should.be.a('string');
         html.should.match(/<span [^>]+>Pizza<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"WikiList".+"Pizza".+\}<\/script>/);
+        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Pizza".+\}<\/script>/);
       }),
       serverRoute('/Cats').then(function (html) {
         html.should.be.a('string');
         html.should.match(/<span [^>]+>Cats<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"WikiList".+"Cats".+\}<\/script>/);
+        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Cats".+\}<\/script>/);
       }),
       serverRoute('/Dogs').then(function (html) {
         html.should.be.a('string');
         html.should.match(/<span [^>]+>Dogs<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"WikiList".+"Dogs".+\}<\/script>/);
+        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Dogs".+\}<\/script>/);
       })
     ]);
   });

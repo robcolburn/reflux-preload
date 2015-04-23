@@ -31,7 +31,6 @@
     "chai": "^2.1.2",
     "chai-as-promised": "^4.3.0",
     "es6-promise": "^2.0.1",
-    "es6-promises": "^1.0.10",
     "express": "^4.12.3",
     "ghooks": "^0.3.2",
     "jsdom": "^4.0.5",

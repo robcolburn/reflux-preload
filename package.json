@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/robcolburn/reflux-preload",
   "dependencies": {
-    "promise-collector": "^1.0.1"
+    "promise-collector": "^2.0.0"
   },
   "devDependencies": {
     "axios": "^0.5.2",

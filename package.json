@@ -5,7 +5,7 @@
   "main": "reflux-preload.js",
   "scripts": {
     "lint": "jshint **.js */**.js",
-    "test": "mocha",
+    "test": "istanbul cover _mocha",
     "example": "node ./example-app/server.js"
   },
   "repository": {
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/robcolburn/reflux-preload",
   "dependencies": {
-    "promise-collector": "^2.0.0"
+    "promise-collector": "^2.1.1"
   },
   "devDependencies": {
     "axios": "^0.5.2",
@@ -33,6 +33,7 @@
     "es6-promise": "^2.0.1",
     "express": "^4.12.3",
     "ghooks": "^0.3.2",
+    "istanbul": "^0.3.13",
     "jsdom": "^4.0.5",
     "jshint": "^2.6.3",
     "lodash": "^3.6.0",

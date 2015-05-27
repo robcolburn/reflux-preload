@@ -2,6 +2,9 @@
 
 A way to manage preloading on the server within a [`reflux`](https://www.npmjs.com/package/reflux) based application.
 
+[![npm package](https://img.shields.io/npm/v/reflux-preload.svg?style=flat-square)](https://www.npmjs.org/package/reflux-preload)
+[![build status](https://img.shields.io/travis/robcolburn/reflux-preload/master.svg?style=flat-square)](https://travis-ci.org/robcolburn/reflux-preload)
+[![dependency status](https://img.shields.io/david/robcolburn/reflux-preload.svg?style=flat-square)](https://david-dm.org/robcolburn/reflux-preload)
 
 An architecture based on [`react-router`](https://npmjs.com/package/react-router) and [`reflux`](https://npmjs.com/package/reflux) has a [chicken or egg dilemma](http://en.wikipedia.org/wiki/Chicken_or_the_egg) problem.  Where you need data to render your page on the server, but you don't know what data to load until you've rendered.
 

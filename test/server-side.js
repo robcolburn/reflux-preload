@@ -8,16 +8,14 @@ describe('Server-side', function() {
     MockWikipediaAPI.mock();
     return serverRoute('/').then(function (html) {
       html.should.match(/<ul [^>]+><\/ul>/);
-      JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-        .should.have.deep.property('resolved.WikiList.query').that.eql({});
+      getPayload(html).should.have.deep.property('resolved[0].value.query').that.eql({});
     });
   });
   it('Renders with some query.', function () {
     MockWikipediaAPI.mock();
     return serverRoute('/Pizza').then(function (html) {
       html.should.match(/<span [^>]+>Pizza<\/span>/);
-      JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-        .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
+      getPayload(html).should.have.deep.property('resolved[0].value.query.titles', 'Pizza');
     });
   });
   it('Renders concurrent queries.', function () {
@@ -25,18 +23,15 @@ describe('Server-side', function() {
     return Promise.all([
       serverRoute('/Pizza').then(function (html) {
         html.should.match(/<span [^>]+>Pizza<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
+        getPayload(html).should.have.deep.property('resolved[0].value.query.titles', 'Pizza');
       }),
       serverRoute('/Cats').then(function (html) {
         html.should.match(/<span [^>]+>Cats<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Cats');
+        getPayload(html).should.have.deep.property('resolved[0].value.query.titles', 'Cats');
       }),
       serverRoute('/Dogs').then(function (html) {
         html.should.match(/<span [^>]+>Dogs<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Dogs');
+        getPayload(html).should.have.deep.property('resolved[0].value.query.titles', 'Dogs');
       })
     ]);
   });
@@ -45,12 +40,15 @@ describe('Server-side', function() {
     return serverRoute('/Pizza').then(function () {
       throw new Error("Bad request, should not resolve");
     }, function (result) {
-      result.should.have.deep.property('errors.WikiList.status', 404);
+      result.should.have.deep.property('errors[0].value.status', 404);
       var html = result.html;
       html.should.match(/<ul [^>]+><\/ul>/);
-      JSON.parse(html.match(/<script>refluxPreload=(.+)<\/script>/i)[1])
-        .should.have.deep.property('rejected.WikiList');
+      getPayload(html).should.have.deep.property('rejected[0].value');
     });
   });
 });
 
+var rx = /<script>refluxPreload=([^<]+)<\/script>/i;
+function getPayload(html) {
+  return JSON.parse(html.match(rx)[1]);
+}

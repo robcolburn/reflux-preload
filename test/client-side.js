@@ -38,36 +38,43 @@ describe('Client-side', function () {
     return document.body.innerHTML;
   }
 
+
+
+  var rx = /<script>refluxPreload=([^<]+)<\/script>/i;
+  function getPayload(html) {
+    return JSON.parse(html.match(rx)[1]);
+  }
+
   it('Renders the empty query', function () {
     return clientRoute('/').then(function (html) {
       html.should.match(/<ul [^>]+><\/ul>/);
-      JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
-        .should.have.deep.property('resolved.WikiList.query').that.eql({});
+      getPayload(html).should.have.deep
+        .property('resolved[0].value.query').that.eql({});
     });
   });
   it('Renders with some query.', function () {
     return clientRoute('/Pizza').then(function (html) {
       html.should.match(/<span [^>]+>Pizza<\/span>/);
-      JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
-        .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
+      getPayload(html).should.have.deep
+        .property('resolved[0].value.query.titles', 'Pizza');
     });
   });
   it('Renders concurrent queries.', function () {
     return Promise.all([
       clientRoute('/Pizza').then(function (html) {
         html.should.match(/<span [^>]+>Pizza<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
+        getPayload(html).should.have.deep
+          .property('resolved[0].value.query.titles', 'Pizza');
       }),
       clientRoute('/Cats').then(function (html) {
         html.should.match(/<span [^>]+>Cats<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Cats');
+        getPayload(html).should.have.deep
+          .property('resolved[0].value.query.titles', 'Cats');
       }),
       clientRoute('/Dogs').then(function (html) {
         html.should.match(/<span [^>]+>Dogs<\/span>/);
-        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
-          .should.have.deep.property('resolved.WikiList.query.titles', 'Dogs');
+        getPayload(html).should.have.deep
+          .property('resolved[0].value.query.titles', 'Dogs');
       })
     ]);
   });
@@ -76,4 +83,5 @@ describe('Client-side', function () {
       html.should.match(/<a[^>]+style="color:\s?green[^>]+>/);
     });
   });
+
 });

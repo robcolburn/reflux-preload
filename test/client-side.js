@@ -1,20 +1,18 @@
-/*global require:true, describe:true, before:true, it:true, window:true, setTimeout:true*/
+/*global require:true, describe:true, before:true, after: true, it:true, setTimeout:true*/
+var phantom = require('phantom');
+var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
 describe('Client-side', function () {
   'use strict';
   var browser;
   var server = require('../example-app/server');
-  var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
-  var promiseBrowser = new Promise(function (resolve) {
-    require('phantom').create(function (ph) {
-      browser = ph;
-      resolve();
-    });
-  });
-
+  var port = server.address().port;
 
   // Get browser and server up and running
-  before(function () {
-    return promiseBrowser;
+  before(function (done) {
+    phantom.create(function (ph) {
+      browser = ph;
+      done();
+    });
   }, 2000);
 
   after(function () {
@@ -24,11 +22,14 @@ describe('Client-side', function () {
 
   function clientRoute(path, browserFn) {
     MockWikipediaAPI.mock();
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       browser.createPage(function (page) {
-        page.open('http://localhost:3000' + path,
-          page.evaluate.bind(page, browserFn || getHTML, resolve)
-        );
+        page.open('http://localhost:' + port + path, function() {
+          page.evaluate(browserFn || getHTML, function (result) {
+            page.close();
+            resolve(result);
+          });
+        });
       });
     });
   }
@@ -39,40 +40,39 @@ describe('Client-side', function () {
 
   it('Renders the empty query', function () {
     return clientRoute('/').then(function (html) {
-      html.should.be.a('string');
       html.should.match(/<ul [^>]+><\/ul>/);
-      html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList":\{"query":\{\},"pages":\{\}\}\},"rejected":\{\}\}<\/script>/);
+      JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
+        .should.have.deep.property('resolved.WikiList.query').that.eql({});
     });
   });
   it('Renders with some query.', function () {
     return clientRoute('/Pizza').then(function (html) {
-      html.should.be.a('string');
       html.should.match(/<span [^>]+>Pizza<\/span>/);
-      html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Pizza".+\}<\/script>/);
+      JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
+        .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
     });
   });
   it('Renders concurrent queries.', function () {
     return Promise.all([
       clientRoute('/Pizza').then(function (html) {
-        html.should.be.a('string');
         html.should.match(/<span [^>]+>Pizza<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Pizza".+\}<\/script>/);
+        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
+          .should.have.deep.property('resolved.WikiList.query.titles', 'Pizza');
       }),
       clientRoute('/Cats').then(function (html) {
-        html.should.be.a('string');
         html.should.match(/<span [^>]+>Cats<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Cats".+\}<\/script>/);
+        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
+          .should.have.deep.property('resolved.WikiList.query.titles', 'Cats');
       }),
       clientRoute('/Dogs').then(function (html) {
-        html.should.be.a('string');
         html.should.match(/<span [^>]+>Dogs<\/span>/);
-        html.should.match(/<script>refluxPreload=\{"resolved":\{"WikiList".+"Dogs".+\}<\/script>/);
+        JSON.parse(html.match(/<script>refluxPreload=([^<]+)<\/script>/i)[1])
+          .should.have.deep.property('resolved.WikiList.query.titles', 'Dogs');
       })
     ]);
   });
   it('Runs React lifecycle.', function () {
     return clientRoute('/Pizza').then(function (html) {
-      html.should.be.a('string');
       html.should.match(/<a[^>]+style="color:\s?green[^>]+>/);
     });
   });

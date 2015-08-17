@@ -21,7 +21,7 @@ MockWikipediaAPI.mock = function (count, status) {
   status = status || 200;
   var scope = this;
   if (!scope || !scope.isDone) {
-    scope = nock('http://en.wikipedia.org');
+    scope = nock('https://en.wikipedia.org');
   }
   for (var i = 0; i < count; i++) {
     scope = scope

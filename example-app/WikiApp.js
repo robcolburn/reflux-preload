@@ -55,7 +55,7 @@ var WikiList = React.createClass({
     return D.ul({className: 'wiki-list'},
       pages && map(pages, function (page, id) {
          return D.li({key: id}, D.a(
-           {href: 'http://en.wikipedia.org/wiki/' + page.title,
+           {href: 'https://en.wikipedia.org/wiki/' + page.title,
            style: this.state.mounted && {color:'green'}},
            [page.pageid, ':', page.title]
          ));

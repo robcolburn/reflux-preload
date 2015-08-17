@@ -23,7 +23,7 @@ app.use('/assets', webpackMiddleware(webpack({
   publicPath: '/',
   path: '/',
   filename: 'bundle.js',
-  lazy: true,
+  lazy: false,
   noInfo: true,
   quiet: true,
   stats: {

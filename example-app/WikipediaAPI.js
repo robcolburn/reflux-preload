@@ -17,7 +17,7 @@ var WikipediaAPI = {};
  *        {"24768":{"pageid":24768,"ns":0,"title":"Pizza"}}
  */
 WikipediaAPI.query = function (action_parameters) {
-  return axios.get("http://en.wikipedia.org/w/api.php", {
+  return axios.get("https://en.wikipedia.org/w/api.php", {
     params: extend({
       "action": "query",
       "format": "json",

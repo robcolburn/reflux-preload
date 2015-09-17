@@ -76,23 +76,19 @@ Preload.render = function (render) {
  *
  * @param {object} collection
  *   Generic Object to store on client
- * @param {string} payloadName
- *   Optional. Sets the name of payload to store on client.
  * @return {string}
  *   Encoded payload to deliver to client (with inline script).
  */
-Preload.toPayload = function (collection, payloadName) {
+Preload.toPayload = function (collection) {
   return '<script>' + this.payloadName + '=' + JSON.stringify(collection) + '</script>';
 };
 /**
  * Get payload on client side.
  *
- * @param {string} payloadName
- *   Optional. Sets the name of payload to retreive on client.
  * @return {object}
  *   The payload.
  */
-Preload.getPayload = function (payloadName) {
+Preload.getPayload = function () {
   /*global window*/
   return window[this.payloadName];
 };

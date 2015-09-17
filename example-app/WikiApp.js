@@ -21,9 +21,8 @@ var WikiStore = Reflux.createStore({
       this.onLoadFailed(err);
     }
   },
-  onLoadFailed: function(err){
-    // console.error(err);
-    this.trigger(this.data = {});
+  onLoadFailed: function(error){
+    this.trigger(this.data = {error: error});
   },
   getInitialState: function() {
     return this.data;
@@ -34,7 +33,7 @@ exports.WikiStore = WikiStore;
 var WikiList = React.createClass({
   mixins: [
     Reflux.connect(WikiStore, 'wiki'),
-    Preload.connect('WikiList', GetWiki.load),
+    Preload.connect('WikiList', GetWiki.load)
   ],
   contextTypes: {
     router: React.PropTypes.func
@@ -109,13 +108,14 @@ exports.serverRoute = serverRoute;
  *   Yields ReactElement of rendered virutal DOM.
  */
 function clientRoute () {
+  /*global document*/
   Preload.deliver(Preload.getPayload());
   return new Promise(function (resolve) {
     Router.run(routes, Router.HistoryLocation, function (Handler) {
-      React.render(
+      resolve(React.render(
         React.createElement(Handler, null),
         document.getElementById('app')
-      );
+      ));
     });
   });
 }

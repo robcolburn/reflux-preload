@@ -1,6 +1,6 @@
 var nock = require('nock');
 
-MockWikipediaAPI = {};
+var MockWikipediaAPI = {};
 MockWikipediaAPI.on = function() {
   nock.enableNetConnect();
 };

@@ -1,3 +1,4 @@
+/*eslint no-console: 0*/
 var express = require('express');
 var app = express();
 var webpackMiddleware = require('webpack-dev-middleware');
@@ -54,7 +55,7 @@ function reactRoute (req, res, next) {
 }
 
 // Print Error Messages
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
   console.error(err.stack);
   res.status((err && err.status) || 500).send({
     message: err.message,

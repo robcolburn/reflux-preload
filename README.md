@@ -69,9 +69,11 @@ An architecture based on [`react-router`](https://npmjs.com/package/react-router
     contextTypes: {
       router: React.PropTypes.func
     },
+    // Preload hook: Fires loading action and a promise of data.
     preload: function () {
       return GetPages.load(this.context.router.getCurrentParams());
     },
+    // Checks to see if loading is needed on client-side.
     isLoaded: function () {
       return this.state.wiki.query === this.getParams().query;
     },
@@ -87,9 +89,46 @@ An architecture based on [`react-router`](https://npmjs.com/package/react-router
   });
   ```
 
+  If you would prefer to avoid Mixins, you can call the methods directly.
+
+  ```jsx
+  Preload.receiveAction('GetWiki', GetWiki.load);
+  var WikiList = React.createClass({
+    mixins: [
+      Router.State,
+      Reflux.connect(WikiStore, 'wiki'),
+    ],
+    contextTypes: {
+      router: React.PropTypes.func
+    },
+    componentWillMount: function () {
+      // Server: Always preload
+      if (typeof window === "undefined") {
+        Preload.promise(name, function () {
+          return GetPages.load(this.context.router.getCurrentParams());
+        });
+      }
+      // Client: Check if Preload if needed
+      else if (this.state.wiki.query === this.getParams().query) {
+        GetPages.load(this.context.router.getCurrentParams());
+      }
+    },
+    render: function () {
+      return <ul>
+        {_.mapValues(this.state.wiki.pages, page =>
+           <li><a href={'http://en.wikipedia.org/wiki/' + page.title}>
+             {page.pageid} : {page.title}
+           </a></li>
+        )}
+      </ul>
+    }
+  });
+  ```
+
+
 2. Server-side Renderer
 
-  Render the markup, while collecting promises.  The module handles the double calls to render for you, you'll just need to wrap your normal.
+  Since, we do not know the tree in advance, we need to render twice.  Once to collect any promises, and again to actually render.  The module handles the double calls to render for you, you'll just need to wrap your normal render method.
 
   * Callback Style
   ```js

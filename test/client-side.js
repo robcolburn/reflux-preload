@@ -1,5 +1,4 @@
-/*eslint-env browser, mocha*/
-/*eslint no-console: 0*/
+/*eslint-env browser */
 var phantom = require('phantom');
 var MockWikipediaAPI = require('../example-app/MockWikipediaAPI');
 describe('Client-side', function () {

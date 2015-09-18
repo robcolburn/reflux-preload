@@ -18,7 +18,7 @@ var WikiStore = Reflux.createStore({
     this.trigger(this.data = data);
   },
   onLoadFailed: function(error){
-    this.trigger(this.data = {error: error});
+    this.trigger(this.data = {error: error.status + (error.statusText || '')});
   },
   getInitialState: function() {
     return this.data;
@@ -32,12 +32,8 @@ var UIStore = Reflux.createStore({
   listenables: [UIActions],
   state: {},
   onTextColor: function(textColor){
-    try {
-      this.state.textColor = textColor;
-      this.trigger(this.state);
-    } catch (err) {
-      this.onLoadFailed(err);
-    }
+    this.state.textColor = textColor;
+    this.trigger(this.state);
   },
   getInitialState: function() {
     return this.state;
@@ -74,17 +70,20 @@ var WikiList = React.createClass({
     var pages = this.state.wiki && this.state.wiki.pages;
     return D.div({}, [
       D.h1({key: 'title',
-        style: {color: this.state.ui.textColor}}, 'Wikipedia App'),
-      D.ul({key: 'list', className: 'wiki-list'},
-        pages && map(pages, function (page, id) {
-          return D.li({key: id}, D.a({
-            href: 'https://en.wikipedia.org/wiki/' + page.title,
-            style: {color: this.state.textColor || this.state.ui.textColor || ''}
-          }, [
-            page.pageid, ':', page.title
-          ]));
-        }, this)
-      )
+        style: {color: this.state.ui.textColor}},
+        'Wikipedia App'),
+      this.isLoaded()
+        ? D.ul({key: 'list', className: 'wiki-list'},
+          pages && map(pages, function (page, id) {
+            return D.li({key: id}, D.a({
+              href: 'https://en.wikipedia.org/wiki/' + page.title,
+              style: {color: this.state.textColor || this.state.ui.textColor || ''}
+            }, [
+              page.pageid, ':', page.title
+            ]));
+          }, this)
+        )
+        : D.p({key: 'description'}, this.state.wiki.error || 'Loading...')
     ]);
   }
 });

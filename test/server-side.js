@@ -1,4 +1,3 @@
-/*eslint-env mocha*/
 describe('Server-side', function() {
   'use strict';
   var serverRoute = require('../example-app/WikiApp').serverRoute;
@@ -42,7 +41,7 @@ describe('Server-side', function() {
     }, function (result) {
       result.should.have.deep.property('errors[0].value.status', 404);
       var html = result.html;
-      html.should.match(/<ul [^>]+><\/ul>/);
+      html.should.match(/<p [^>]+>404<\/p>/);
       getPayload(html).should.have.deep.property('rejected[0].value');
     });
   });

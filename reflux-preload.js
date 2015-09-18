@@ -20,7 +20,8 @@ Preload.payloadName = 'refluxPreload';
  * @param {Reflux.Action} action
  *   The async Action to trigger with loaded or rejected data.
  * @param {object} hooks
- *   Optional, key-values to override hook names.
+ *   Optional, key-values to override hooks.
+ *   Values can be functions, or names of methods on the component.
  * @return {Mixin}
  *   Mixin for a React Component.
  */
@@ -31,17 +32,7 @@ Preload.connect = function(name, action, hooks) {
     preload = hooks.preload;
     isLoaded = hooks.isLoaded;
   }
-  // Tell PromiseCollector to call a fn when it has data to deliver.
-  if (action.completed) {
-    // console.log('Deliver ', name, ' triggero Async handler');
-    Preload.receive(name,
-      action.completed.trigger.bind(action.completed),
-      action.failed.trigger.bind(action.failed));
-  }
-  else {
-    // console.log('Deliver ', name, ' to Sync handler');
-    Preload.receive(name, action.trigger.bind(action));
-  }
+  Preload.receiveAction(name, action);
   return {
     componentWillMount: function () {
       var _preload = typeof preload === "string" ? this[preload] : preload;
@@ -53,12 +44,30 @@ Preload.connect = function(name, action, hooks) {
           Preload.promise(name, _preload);
         }
         // Client: If Component would like, kick off loading on Component's behalf.
-        if (!isServer && (!_isLoaded || !_isLoaded())) {
+        else if (!_isLoaded || !_isLoaded()) {
           _preload();
         }
       }
     }
   };
+};
+/**
+ * Give PromiseCollector a function to call, when it has data to deliver.
+ *
+ * @param {string} name
+ *   Identifier for this loading action.
+ * @param {Reflux.Action} action
+ *   The async Action to trigger with loaded or rejected data.
+ */
+Preload.receiveAction = function(name, action) {
+  if (action.completed) {
+    Preload.receive(name,
+      action.completed.trigger.bind(action.completed),
+      action.failed.trigger.bind(action.failed));
+  }
+  else {
+    Preload.receive(name, action.trigger.bind(action));
+  }
 };
 /**
  * Trigger an get a Sync Action's promise. 

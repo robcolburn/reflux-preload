@@ -25,6 +25,9 @@ describe('Client-side', function () {
     MockWikipediaAPI.mock();
     return new Promise(function (resolve) {
       browser.createPage(function (page) {
+        page.set('onConsoleMessage', function (msg) {
+          console.log("Browser Console: " + msg)
+        });
         page.open('http://localhost:' + port + path, function() {
           page.evaluate(browserFn || getHTML, function (result) {
             page.close();

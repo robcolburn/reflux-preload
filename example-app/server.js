@@ -1,3 +1,7 @@
 #!/usr/bin/env node
-module.exports = require('./middleware')
-  .listen(process.env.PORT || 3000);
+/*eslint no-console: 0*/
+var port = process.env.PORT || 3000;
+module.exports = require('./middleware').listen(port);
+console.log('Example Server Started');
+console.log('----------------------');
+console.log('http://localhost:' + port);

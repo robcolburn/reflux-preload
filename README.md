@@ -43,9 +43,9 @@ An architecture based on [`react-router`](https://npmjs.com/package/react-router
  * You're accustomed to Reflux's async Actions using the `listenAndPromise` method.
 
  ```js
- var GetWiki = {};
- GetWiki.load = Reflux.createAction({asyncResult: true});
- GetWiki.load.listenAndPromise(function(titles) {
+ var GetWikiActions = {};
+ GetWikiActions.load = Reflux.createAction({asyncResult: true});
+ GetWikiActions.load.listenAndPromise(function(titles) {
    return axios.get("http://en.wikipedia.org/w/api.php", {
      "titles": titles,
      "action": "query",

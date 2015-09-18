@@ -33,14 +33,10 @@ app.use('/assets', webpackMiddleware(webpack({
 }));
 
 // Routes to React App
-app.get('/', reactRoute);
-app.get('/:query', reactRoute);
+// Don't match URLs that look like filenames like favicon.ico
+app.get(/^\/[0-9A-Za-z\-\_]*$/, reactRoute);
 
 function reactRoute (req, res, next) {
-  // Don't match URLs that look like filenames like favicon.ico
-  if (req.path.match(/\.[a-z]{,4}$/)) {
-    return next();
-  }
   WikiApp.serverRoute(req.path)
     .then(function (html) {
       res.send(

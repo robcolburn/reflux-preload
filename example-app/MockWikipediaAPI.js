@@ -1,12 +1,6 @@
 var nock = require('nock');
 
 var MockWikipediaAPI = {};
-MockWikipediaAPI.on = function() {
-  nock.enableNetConnect();
-};
-MockWikipediaAPI.off = function() {
-  nock.disableNetConnect();
-};
 /**
  *
  * @param {int} count
@@ -19,18 +13,17 @@ MockWikipediaAPI.off = function() {
 MockWikipediaAPI.mock = function (count, status) {
   count = count || 1;
   status = status || 200;
-  var scope = this;
-  if (!scope || !scope.isDone) {
-    scope = nock('https://en.wikipedia.org');
+  if (!this.scope || !this.scope.isDone) {
+    this.scope = nock('https://en.wikipedia.org');
   }
   for (var i = 0; i < count; i++) {
-    scope = scope
+    this.scope = this.scope
       .filteringPath(/\?.*/g, '')
       .get('/w/api.php')
       .delayConnection(30)
       .reply(status, success);
   }
-  return scope;
+  return this.scope;
 };
 
 function success (uri) {

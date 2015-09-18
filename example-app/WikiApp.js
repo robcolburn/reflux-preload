@@ -7,19 +7,15 @@ var Preload = require('..');
 var WikipediaAPI = require('./WikipediaAPI');
 
 // General Reflux Action template - Wikipedia use-case
-var GetWiki = {};
-GetWiki.load = Reflux.createAction({asyncResult: true});
-GetWiki.load.listenAndPromise(WikipediaAPI.query);
+var GetWikiActions = {};
+GetWikiActions.load = Reflux.createAction({asyncResult: true});
+GetWikiActions.load.listenAndPromise(WikipediaAPI.query);
 
 var WikiStore = Reflux.createStore({
-  listenables: [GetWiki],
+  listenables: [GetWikiActions],
   data: {},
   onLoadCompleted: function(data){
-    try {
-      this.trigger(this.data = data);
-    } catch (err) {
-      this.onLoadFailed(err);
-    }
+    this.trigger(this.data = data);
   },
   onLoadFailed: function(error){
     this.trigger(this.data = {error: error});
@@ -30,36 +26,66 @@ var WikiStore = Reflux.createStore({
 });
 exports.WikiStore = WikiStore;
 
+var UIActions = {};
+UIActions.textColor = Reflux.createAction({sync: true});
+var UIStore = Reflux.createStore({
+  listenables: [UIActions],
+  state: {},
+  onTextColor: function(textColor){
+    try {
+      this.state.textColor = textColor;
+      this.trigger(this.state);
+    } catch (err) {
+      this.onLoadFailed(err);
+    }
+  },
+  getInitialState: function() {
+    return this.state;
+  }
+});
+exports.UIStore = UIStore;
+
 var WikiList = React.createClass({
   mixins: [
-    Reflux.connect(WikiStore, 'wiki'),
-    Preload.connect('WikiList', GetWiki.load)
+    Reflux.connect(WikiStore, 'wiki')
+    ,Reflux.connect(UIStore, 'ui')
+    ,Preload.connect('WikiList', GetWikiActions.load)
+    ,Preload.connect('WikiUI', UIActions.textColor, {
+      preload: function() {
+        return Preload.triggerPromise(UIActions.textColor, 'blue');
+      }
+    })
   ],
   contextTypes: {
     router: React.PropTypes.func
   },
   preload: function(){
-    return GetWiki.load(this.context.router.getCurrentParams());
+    return GetWikiActions.load(this.context.router.getCurrentParams());
   },
   isLoaded: function() {
     return isEqual(this.state.wiki.query, this.context.router.getCurrentParams());
   },
   componentDidMount: function() {
     // Apply a state, so we can verify this occurs in testing.
-    this.setState({mounted: true});
+    this.setState({textColor: 'green'});
   },
   render: function () {
     var D = React.DOM;
     var pages = this.state.wiki && this.state.wiki.pages;
-    return D.ul({className: 'wiki-list'},
-      pages && map(pages, function (page, id) {
-         return D.li({key: id}, D.a(
-           {href: 'https://en.wikipedia.org/wiki/' + page.title,
-           style: this.state.mounted && {color:'green'}},
-           [page.pageid, ':', page.title]
-         ));
-      }, this)
-    );
+    return D.div({}, [
+      D.h1({key: 'title',
+        style: {color: this.state.ui.textColor}}, 'Wikipedia App'),
+      D.ul({key: 'list', className: 'wiki-list'},
+        pages && map(pages, function (page, id) {
+          return D.li({key: id}, D.a({
+            href: 'https://en.wikipedia.org/wiki/' + page.title,
+            style: {color: this.state.textColor || this.state.ui.textColor || ''}
+          }, [
+            page.pageid, ':', page.title
+          ]));
+        }, this)
+      )
+    ]);
   }
 });
 exports.WikiList = WikiList;
